@@ -49,7 +49,7 @@ Adding support for condition.
 
 "
 Class {
-	#name : #PicoInterpreter,
+	#name : #AbraInterpreter,
 	#superclass : #RBCollectingProgramNodeVisitor,
 	#instVars : [
 		'stack',
@@ -60,14 +60,14 @@ Class {
 }
 
 { #category : #accessing }
-PicoInterpreter >> arguments: anArray [
+AbraInterpreter >> arguments: anArray [
 	"Represent the original arguments of a message.
 	Look at PicoBlop >> send: aSelector withArguments: anArray"
 	arguments := anArray
 ]
 
 { #category : #initialization }
-PicoInterpreter >> initialize [ 
+AbraInterpreter >> initialize [ 
 	super initialize.
 	arguments := #().
 	stack := Stack new.
@@ -77,7 +77,7 @@ PicoInterpreter >> initialize [
 ]
 
 { #category : #'stack management' }
-PicoInterpreter >> newFrame [
+AbraInterpreter >> newFrame [
 	"a new scope is an environment, i.e., a dictionary which support lookup in its parent.
 	This is important to manage variable shadowing. A local temp can hide another temp of a parent
 	scope in a local scope."
@@ -85,7 +85,7 @@ PicoInterpreter >> newFrame [
 ]
 
 { #category : #'stack management' }
-PicoInterpreter >> pushNewFrame [
+AbraInterpreter >> pushNewFrame [
 	"Pushing a new scope consists in creating a new dictionary whose parent is the top of the stack
 	and pushing it as a new top. This way variable not found in current scope will be looked up in previous scope."
 
@@ -97,44 +97,44 @@ PicoInterpreter >> pushNewFrame [
 ]
 
 { #category : #accessing }
-PicoInterpreter >> receiver [
+AbraInterpreter >> receiver [
 	"Return the value of the binding to #self in the current scope."
 	
 	^ self valueOfTempVariable: #self
 ]
 
 { #category : #accessing }
-PicoInterpreter >> receiver: anObject [
+AbraInterpreter >> receiver: anObject [
 	"We add a new binding #self and the argument in the current scope."
 	self setValueOfTempVariable: #self to: anObject 
 ]
 
 { #category : #'stack management' }
-PicoInterpreter >> setValueOfTempVariable: name to: aValue [
+AbraInterpreter >> setValueOfTempVariable: name to: aValue [
 	^ stack top at: name put: aValue 
 ]
 
 { #category : #'stack management' }
-PicoInterpreter >> stack [
+AbraInterpreter >> stack [
 	^ stack
 ]
 
 { #category : #'stack management' }
-PicoInterpreter >> valueOfTempVariable: name [
+AbraInterpreter >> valueOfTempVariable: name [
 	"Return the value of the temporary named name in the current scope."
 	
 	^ stack top at: name
 ]
 
 { #category : #visiting }
-PicoInterpreter >> visitArgumentNode: anArgumentNode [
+AbraInterpreter >> visitArgumentNode: anArgumentNode [
 	"Sent *each time* an argument node is found"
 
 	^ self valueOfTempVariable: anArgumentNode name
 ]
 
 { #category : #visiting }
-PicoInterpreter >> visitAssignmentNode: anAssignmentNode [
+AbraInterpreter >> visitAssignmentNode: anAssignmentNode [
 	
 	| value |
 	value := self visitNode: anAssignmentNode value. 
@@ -144,31 +144,31 @@ PicoInterpreter >> visitAssignmentNode: anAssignmentNode [
 ]
 
 { #category : #visiting }
-PicoInterpreter >> visitGlobalNode: aGlobalNode [
+AbraInterpreter >> visitGlobalNode: aGlobalNode [
 
 	^ Smalltalk globals at: aGlobalNode name ifAbsent: [ nil ]
 ]
 
 { #category : #visiting }
-PicoInterpreter >> visitInstanceVariableNode: aVariableNode [
+AbraInterpreter >> visitInstanceVariableNode: aVariableNode [
 
 	^ self receiver valueOfInstanceVariable: aVariableNode name
 ]
 
 { #category : #visiting }
-PicoInterpreter >> visitLiteralNode: aLiteralNode [
+AbraInterpreter >> visitLiteralNode: aLiteralNode [
 	
 	^ aLiteralNode value
 ]
 
 { #category : #visiting }
-PicoInterpreter >> visitMessageArgumentNodes: aCol [
+AbraInterpreter >> visitMessageArgumentNodes: aCol [
 
 	^ aCol collect: [ :each | self visitMessageArgumentNode: each ]
 ]
 
 { #category : #visiting }
-PicoInterpreter >> visitMessageNode: aMessageNode [
+AbraInterpreter >> visitMessageNode: aMessageNode [
 	
 	^ ((aMessageNode selector = #send:) or: [ aMessageNode selector = #send:withArguments: ])
 		ifTrue: [ 
@@ -192,7 +192,7 @@ PicoInterpreter >> visitMessageNode: aMessageNode [
 ]
 
 { #category : #'visiting variable' }
-PicoInterpreter >> visitParameterNode: aNode [
+AbraInterpreter >> visitParameterNode: aNode [
 	"We visit a method definition and its parameters i.e., foo: arg"
 	
 	self setValueOfTempVariable: aNode name to: (arguments at: argumentIndex).
@@ -200,14 +200,14 @@ PicoInterpreter >> visitParameterNode: aNode [
 ]
 
 { #category : #'visiting variable' }
-PicoInterpreter >> visitParameterNodes: aCol [
+AbraInterpreter >> visitParameterNodes: aCol [
 
 	argumentIndex := 1.
 	super visitParameterNodes: aCol
 ]
 
 { #category : #visiting }
-PicoInterpreter >> visitReturnNode: aMethodNode [
+AbraInterpreter >> visitReturnNode: aMethodNode [
 	| val | 
 	val := super visitReturnNode: aMethodNode.
 	stack pop.
@@ -215,27 +215,27 @@ PicoInterpreter >> visitReturnNode: aMethodNode [
 ]
 
 { #category : #'visiting variable' }
-PicoInterpreter >> visitSelfNode: aSelfNode [
+AbraInterpreter >> visitSelfNode: aSelfNode [
 	"The value of self is the message receiver"
 	^ self receiver
 ]
 
 { #category : #'visiting variable' }
-PicoInterpreter >> visitSuperNode: aSuperNode [
+AbraInterpreter >> visitSuperNode: aSuperNode [
 	"The value of super is the receiver. Yes madam!"
 
 	^ self receiver
 ]
 
 { #category : #'visiting variable' }
-PicoInterpreter >> visitTemporaryDeclarationNode: aTemporaryDeclarationNode [
+AbraInterpreter >> visitTemporaryDeclarationNode: aTemporaryDeclarationNode [
 	"We do nothing for declaration of temps since there is no initial value in the temps definition"
 
 	^ self
 ]
 
 { #category : #'visiting variable' }
-PicoInterpreter >> visitVariableNode: aNode [
+AbraInterpreter >> visitVariableNode: aNode [
 	"The value of a variable is to look for in the current environment"
 	"Note that visitVariableNode: is not invoked for instance variable.
 	It is visitInstanceVariableNode: that deals with instance variable."
